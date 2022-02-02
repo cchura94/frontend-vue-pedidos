@@ -8,11 +8,16 @@
 <script>
 // @ is an alias to /src
 import HelloWorld from '@/components/HelloWorld.vue'
+import { indexCategorias } from "./../services/categoria.service"
 
 export default {
   name: 'Home',
   components: {
     HelloWorld
+  },
+  async mounted(){
+    const {data} = await indexCategorias();
+    console.log(data);
   }
 }
 </script>
