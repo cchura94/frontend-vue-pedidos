@@ -1,4 +1,5 @@
 <template>
+<div class="card">
   <h1>Categoria</h1>
   <Button label="Nueva Categoria" icon="pi pi-check" iconPos="right" routerLink="/categoria/nuevo" />
    <DataTable :value="categorias" responsiveLayout="scroll">
@@ -12,6 +13,7 @@
                     </template>
                 </Column>
     </DataTable>
+    </div>
     <Dialog header="Header" v-model:visible="display" >
         <Card>
     <template #title>
