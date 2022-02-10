@@ -15,13 +15,13 @@
                 </template>
             </Toolbar>
 
-  <DataTable ref="dt" :value="productos" v-model:selection="selectedProducts" dataKey="id" 
-                :paginator="true" :rows="10" :filters="filters"
+  <DataTable :lazy="true" :totalRecords="totalRecords" :loading="loading" @page="onPage($event)" ref="dt" :value="productos" v-model:selection="selectedProducts" dataKey="id" 
+                :paginator="true" :rows="5" :filters="filters"
                 paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown" :rowsPerPageOptions="[5,10,25]"
                 currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products" responsiveLayout="scroll">
                 <template #header>
                     <div class="table-header flex flex-column md:flex-row md:justiify-content-between">
-						<h5 class="mb-2 md:m-0 p-as-md-center">Manage Products</h5>
+						<h5 class="mb-2 md:m-0 p-as-md-center">Gestión Productos</h5>
 						<span class="p-input-icon-left">
                             <i class="pi pi-search" />
                             <InputText v-model="filters['global'].value" placeholder="Search..." />
@@ -34,7 +34,7 @@
                 <Column field="nombre" header="Nombre" :sortable="true" style="min-width:16rem"></Column>
                 <Column header="Imagen">
                      <template #body="slotProps">
-                        <img v-if="slotProps.data.imagen" :src="`https://127.0.0.1:8000/${slotProps.data.imagen}`" :alt="slotProps.data.imagen" class="product-image" />
+                        <img v-if="slotProps.data.imagen && slotProps.data.imagen!=='/imagenes'" :src="`http://127.0.0.1:8000${slotProps.data.imagen}`" :alt="slotProps.data.imagen" class="product-image" />
                     </template>
                 </Column>
                 <Column field="precio" header="Precio" :sortable="true" style="min-width:8rem">
@@ -42,7 +42,7 @@
                         {{formatCurrency(slotProps.data.precio)}}
                     </template>
                 </Column>
-                <Column field="categoria_id" header="Categoria" :sortable="true" style="min-width:10rem"></Column>
+                <Column field="categoria.nombre" header="Categoria" :sortable="true" style="min-width:10rem"></Column>
                 <!--Column field="rating" header="Reviews" :sortable="true" style="min-width:12rem">
                     <template #body="slotProps">
                        <Rating :modelValue="slotProps.data.rating" :readonly="true" :cancel="false" />
@@ -72,8 +72,17 @@
                 <small class="p-error" v-if="submitted && !producto.nombre">El nombre es obligatorio.</small>
             </div>
             <div class="field">
+                <label for="img">Imagen</label>
+                <!--FileUpload name="imagen" @change="onImagenSeleccionada" @upload="onUpload" :multiple="false" accept="image/*" :maxFileSize="1000000" v-model="producto.imagen">
+                    <template #empty>
+                        <p>Arrastra y suelte la imagen.</p>
+                    </template>
+                </FileUpload-->
+                <input type="file" @change="onImagenSeleccionada" />
+            </div>
+            <div class="field">
                 <label for="description">Descripción</label>
-                <Textarea id="description" v-model="producto.descripcion" rows="3" cols="20" />
+                <Textarea id="description" v-model="producto.descripcion" rows="2" cols="20" />
             </div>
 
             <div class="field">
@@ -84,7 +93,7 @@
 							<span :class="'product-badge status-' +slotProps.value.value">{{slotProps.value.label}}</span>
 						</div>
 						<div v-else-if="slotProps.value && !slotProps.value.value">
-							<span :class="'product-badge status-' +slotProps.value.toLowerCase()">{{slotProps.value}}</span>
+							<span :class="'product-badge status-' +slotProps.value.value">{{slotProps.value.label}}</span>
 						</div>
 						<span v-else>
 							{{slotProps.placeholder}}
@@ -121,6 +130,7 @@
         </Dialog>
 
       </div>
+      <Toast position="top-right" />
 
 </template>
 
@@ -141,27 +151,65 @@ export default {
       submitted: false,
       statuses: [
 				{label: 'ACTIVO', value: 1},
-				{label: 'INCATIVO', value: 0}
-      ]
+				{label: 'INACTIVO', value: 0}
+      ],
+      totalRecords: 0,
+      loading: false,
+      lazyParams: {},
+      imagenSeleccionada: null
     }
   },
   created(){
      this.initFilters();
   },
   async mounted() {
+       this.loading = true;
+
+        this.lazyParams = {
+            first: 0,
+            rows: this.$refs.dt.rows,
+            sortField: null,
+            sortOrder: null,
+            filters: this.filters
+        };
+    // this.$toast.add({severity:'success', summary: 'Success Message', detail:'Order submitted', life: 3000});
     // categorias
-    const datacategorias = await apiCategoria.indexCategorias();
-    this.categorias = datacategorias.data
+    try{
+        const datacategorias = await apiCategoria.indexCategorias();
+        this.categorias = datacategorias.data
+    }catch(error){
+        console.log(error.response.status);
+        if(error.response.status == 401){
+            this.$router.push({ name: "Login"})
+        }
+    }
     // productos
-    const {data} = await productoService.indexProductos();
-    console.log(data.data)
-    this.productos = data.data
+    this.loadLazyData()
   },
   methods: {
     formatCurrency(value) {
       if(value)
 				return value.toLocaleString('en-US', {style: 'currency', currency: 'USD'});
 			return;
+    },
+    onPage(event) {
+            this.lazyParams = event;
+            this.loadLazyData();
+        },
+    loadLazyData() {
+            this.loading = true;
+            
+            console.log(this.lazyParams)
+
+            this.listarProductos(this.lazyParams.page + 1, this.lazyParams.rows);
+    },
+    async listarProductos(page, limit){
+        const {data} = await productoService.indexProductos(page, limit);
+        console.log(data.data)
+        this.productos = data.data
+        this.totalRecords = data.total
+
+        this.loading = false;
     },
     openNew() {
         this.producto = {};
@@ -188,12 +236,18 @@ export default {
                     this.producto.estado = this.producto.estado.value;
                     await productoService.storeProducto(this.producto)
                     this.productos.push(this.producto);
-                    // this.$toast.add({severity:'success', summary: 'Successful', detail: 'Product Created', life: 3000});
+                    this.$toast.add({severity:'success', summary: 'Correcto', detail: 'Producto Registrado', life: 3000});
                 }
 
                 this.productDialog = false;
                 this.producto = {};
             }
+        },
+
+        onImagenSeleccionada(event){
+            console.log(event.target.files[0])
+            this.producto.imagen = event.target.files[0]
+
         },
 
         exportCSV() {

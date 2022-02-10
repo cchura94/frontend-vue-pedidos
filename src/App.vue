@@ -62,8 +62,8 @@ export default {
 				{
 					label: 'GESTIÓN PEDIDOS', icon: 'pi pi-fw pi-sitemap',
 					items: [
-						{label: 'Nuevo Pedidos', icon: 'pi pi-fw pi-id-card', to: '/producto/nuevo'},
-                        {label: 'Lista Pedidos', icon: 'pi pi-fw pi-id-card', to: '/producto/nuevo'},
+						{label: 'Nuevo Pedidos', icon: 'pi pi-fw pi-id-card', to: '/pedido/nuevo'},
+                        {label: 'Lista Pedidos', icon: 'pi pi-fw pi-id-card', to: '/pedido'},
                         {
                             label: 'Clientes', icon: 'pi pi-fw pi-table',                            
                         }
