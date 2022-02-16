@@ -8,7 +8,7 @@
                 <div class="h-full w-full m-0 py-7 px-4" style="border-radius:53px; background: linear-gradient(180deg, var(--surface-50) 38.9%, var(--surface-0));">
                     <div class="text-center mb-5">
                         <img src="layout/images/avatar.png" alt="Image" height="50" class="mb-3">
-                        <div class="text-900 text-3xl font-medium mb-3">Welcome, Isabel!</div>
+                        <div class="text-900 text-3xl font-medium mb-3">Bienvenido <span v-if="$store.state.user != null">{{ $store.state.user.email }}</span> !</div>
                         <span class="text-600 font-medium">Sign in to continue</span>
                     </div>
                 
@@ -31,13 +31,34 @@
                 </div>
             </div>
         </div>
+        <Toast position="bottom-center" group="bc">
+            <template #message="slotProps">
+                <div class="flex flex-column">
+                    <div class="text-center">
+                        <i class="pi pi-exclamation-triangle" style="font-size: 3rem"></i>
+                        <h4>{{slotProps.message.summary}}</h4>
+                        <p>{{slotProps.message.detail}}</p>
+                    </div>
+                    <div class="grid p-fluid">
+                        <div class="col-6">
+                            <Button class="p-button-success" label="Yes" @click="onConfirm"></Button>
+                        </div>
+                        <div class="col-6">
+                            <Button class="p-button-secondary" label="No" @click="onReject"></Button>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </Toast>
     </div>
-
+    <Toast />
+<Toast position="top-right" group="br" />
   {{ usuario }}
 </template>
 
 <script>
 import * as loginService from "./../../services/login.service"
+import { useToast } from "primevue/usetoast";
 
 export default {
     data(){
@@ -57,17 +78,26 @@ export default {
     },
     methods: {
         async ingresar(){
-            const {data}= await loginService.login(this.usuario)
+            const {data, error}= await loginService.login(this.usuario)
             if(!data.error){
                 console.log(data);
                 let base64 = Buffer.from(data.access_token).toString('base64');
                 // return Buffer.from(data, 'base64').toString('ascii');
                 localStorage.setItem("token",base64)
+                localStorage.setItem("user", JSON.stringify(data.user))
+                this.$store.dispatch("cambiarUsuario", data.user)
+                this.$toast.add({severity:'success', summary: 'Bienvenido', detail:'Correcto', life: 3000});
                 this.$router.push({ name: "Home"})
-
+           
+            }else{
+                this.$toast.add({severity:'error', summary: 'Error de autenticación', detail:'Credenciales incorrectas', life: 3000});
             }
 
         }
+    },
+    setup() {
+        const toast = useToast();
+        toast.add({severity:'info', summary: 'Info Message', detail:'Message Content', life: 3000});
     }
     
 

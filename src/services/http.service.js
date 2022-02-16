@@ -31,7 +31,7 @@ export function http(){
             localStorage.clear();
             /*if(error.response.status === 401){
             }*/
-
+            window.location.href='/login'
             
             //router.push({name: 'Login'})
 

@@ -2,7 +2,9 @@
 <div class="grid">
     <div class="col-12 md:col-12 lg:col-12">
         <div class="card">
-            <h1>Datos Pedido</h1>
+            <h5>USUARIO: {{ $store.state.user.email }}</h5>
+            <h5>COD: {{ $store.state.user.id }}</h5>
+
         </div>
     </div>
     <div class="col-12 md:col-8 lg:col-7">
@@ -49,6 +51,26 @@
             <div class="col-12">
                 <div class="card">
                     <h1>Cliente</h1>
+                    <span class="p-input-icon-left">
+                        <i class="pi pi-search" />
+                        <InputText type="text" v-model="identificacion" placeholder="Buscar por CI/NIT" @change="buscarCliente" />
+                        
+                        <DataTable :value="clientes" responsiveLayout="scroll">
+                            <Column field="nombre_completo" header="NOM"></Column>
+                            <Column field="ci_nit" header="CI/NIT"></Column>
+                            <Column field="telefono" header="TEL"></Column>
+                            <Column field="accion" header="ACCION">
+                                <template #body="slotProps">
+                                    {{ slotProps.data.precio * slotProps.data.cantidad }}
+                                </template>
+                            </Column>
+                        </DataTable>
+                    </span>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="card">
+                    <Button label="Realizar Pedido" />
                 </div>
             </div>
         </div>
@@ -66,8 +88,9 @@
 
 <script>
 // composition api
-import { ref, onMounted  } from 'vue'
+import { ref, onMounted, computed  } from 'vue'
 import * as productoService from './../../../services/producto.service'
+import * as clienteService from './../../../services/cliente.service'
 
 export default {
     setup(){
@@ -77,14 +100,26 @@ export default {
         })
 
         const productos = ref();
-        const carrito = ref([])
+        const carrito = ref([]);
+        const identificacion = ref()
 
         const titulo = "Composition api";
         const contador = ref(0);
+        const clientes = ref([]);
+        /*
+        const buscarCi = computed(() => {
+            return identificacion +"modificado";
+        })
+        */
         
 
         function aumentar(){
             contador.value++;
+        }
+
+        async function buscarCliente(){
+            const {data} = await clienteService.indexCliente(identificacion.value)
+            clientes.value = data;
         }
 
         function addCarrito(prod){
@@ -102,7 +137,10 @@ export default {
             aumentar,
             productos,
             carrito,
-            addCarrito
+            addCarrito,
+            identificacion,
+            clientes,
+            buscarCliente
         }
     }
 }
