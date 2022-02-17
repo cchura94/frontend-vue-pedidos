@@ -34,7 +34,7 @@
                 <Column field="nombre" header="Nombre" :sortable="true" style="min-width:16rem"></Column>
                 <Column header="Imagen">
                      <template #body="slotProps">
-                        <img v-if="slotProps.data.imagen && slotProps.data.imagen!=='/imagenes'" :src="`http://127.0.0.1:8000${slotProps.data.imagen}`" :alt="slotProps.data.imagen" class="product-image" />
+                        <img v-if="slotProps.data.imagen && slotProps.data.imagen!=='/imagenes'" :src="`${urlbase}${slotProps.data.imagen}`" :alt="slotProps.data.imagen" class="product-image" />
                     </template>
                 </Column>
                 <Column field="precio" header="Precio" :sortable="true" style="min-width:8rem">
@@ -65,7 +65,7 @@
 
 
           <Dialog v-model:visible="productDialog" :style="{width: '450px'}" header="Product Details" :modal="true" class="p-fluid">
-            <img :src="`https://127.0.0.1:8000/${producto.imagen}`" :alt="producto.imagen" class="product-image" v-if="producto.imagen" />
+            <img :src="`${urlbase}${producto.imagen}`" :alt="producto.imagen" class="product-image" v-if="producto.imagen" />
             <div class="field">
                 <label for="name">Nombre Producto</label>
                 <InputText id="name" v-model.trim="producto.nombre" required="true" autofocus :class="{'p-invalid': submitted && !producto.nombre}" />
@@ -138,10 +138,11 @@
 import * as productoService from "./../../../services/producto.service"
 import * as apiCategoria from "./../../../services/categoria.service"
 import { FilterMatchMode } from 'primevue/api';
-
+import { urlbase_img } from './../../../config'
 export default {
   data() {
     return {
+      urlbase: '',
       categorias: [],
       productos: null,
       producto: {},
@@ -160,6 +161,7 @@ export default {
     }
   },
   created(){
+      this.urlbase = urlbase_img;
      this.initFilters();
   },
   async mounted() {

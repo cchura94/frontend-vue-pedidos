@@ -1,1 +1,2 @@
-export const urlbase = 'http://127.0.0.1:8000/api'
+export const urlbase = 'https://pedidos-laravel.herokuapp.com/api'
+export const urlbase_img = 'https://pedidos-laravel.herokuapp.com'
