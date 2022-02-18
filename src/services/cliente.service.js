@@ -4,16 +4,16 @@ export const indexCliente = function(id_ci_nit){
     return http().get(`/cliente?search=${id_ci_nit}`);
 }
 
-export const storeCliente = function(categoria){
-    return http().post(`/cliente`, categoria);
+export const storeCliente = function(cliente){
+    return http().post(`/cliente`, cliente);
 }
 
 export const showCliente = function(id){
     return http().get(`/cliente/${id}`);
 }
 
-export const updateCliente = function(id, categoria){
-    return http().put(`/cliente/${id}`, categoria);
+export const updateCliente = function(id, cliente){
+    return http().put(`/cliente/${id}`, cliente);
 }
 
 export const destroyCliente = function(id){
